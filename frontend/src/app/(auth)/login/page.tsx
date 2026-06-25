@@ -3,37 +3,13 @@
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Mail, Lock, User, Briefcase, ShieldAlert, GraduationCap } from "lucide-react";
+import { Mail, Lock, User, Briefcase, ShieldAlert, GraduationCap, Eye, EyeOff, Sparkles } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ROLES = [
-  {
-    id: "student",
-    label: "Student",
-    description: "Access assignments, materials & AI buddy",
-    icon: GraduationCap,
-    color: "border-indigo-500 bg-indigo-50 text-indigo-700",
-    ring: "ring-indigo-400",
-  },
-  {
-    id: "teacher",
-    label: "Teacher",
-    description: "Create assignments, upload notes & manage class",
-    icon: Briefcase,
-    color: "border-emerald-500 bg-emerald-50 text-emerald-700",
-    ring: "ring-emerald-400",
-  },
-  {
-    id: "admin",
-    label: "Admin",
-    description: "Full platform management & analytics",
-    icon: ShieldAlert,
-    color: "border-rose-500 bg-rose-50 text-rose-700",
-    ring: "ring-rose-400",
-  },
+  { id: "student", label: "Student", icon: GraduationCap, route: "/dashboard" },
+  { id: "teacher", label: "Teacher", icon: Briefcase, route: "/teacher" },
+  { id: "admin",   label: "Admin",   icon: ShieldAlert, route: "/dashboard" },
 ];
 
 export default function LoginPage() {
@@ -42,121 +18,123 @@ export default function LoginPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const selectedRole = ROLES.find((r) => r.id === role)!;
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
+    await new Promise(r => setTimeout(r, 600));
     localStorage.setItem("userRole", role);
-    localStorage.setItem("userName", name || email.split("@")[0] || "User");
-    localStorage.setItem("userEmail", email);
-    if (role === "teacher") {
-      router.push("/teacher");
-    } else {
-      router.push("/dashboard");
-    }
+    localStorage.setItem("userName", name.trim() || email.split("@")[0] || "User");
+    localStorage.setItem("userEmail", email.trim().toLowerCase());
+    router.push(selectedRole.route);
   };
 
   return (
-    <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 w-full">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-gray-900">Welcome to CampusFlow</h1>
-        <p className="text-sm text-gray-500 mt-2">AI-Powered Academic Management Platform</p>
+    <div className="glass-card p-8 w-full" style={{ borderRadius: "28px" }}>
+      {/* Logo + Title */}
+      <div className="text-center mb-7">
+        <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-4 animate-float"
+          style={{ background: "linear-gradient(135deg, #7c3aed, #a78bfa)", boxShadow: "0 8px 24px rgba(124,58,237,0.35)" }}>
+          <Sparkles className="w-7 h-7 text-white" />
+        </div>
+        <h1 className="text-2xl font-black gradient-text">Welcome to CampusFlow</h1>
+        <p className="text-sm mt-1" style={{ color: "#7c6fa0" }}>AI-Powered Academic Management Platform</p>
       </div>
 
-      {/* Role Selection */}
-      <div className="mb-8">
-        <p className="text-sm font-semibold text-gray-700 mb-3 text-center">I am signing in as…</p>
+      {/* Role Selector */}
+      <div className="mb-6">
+        <p className="text-xs font-semibold text-center mb-3" style={{ color: "#7c6fa0", textTransform: "uppercase", letterSpacing: "0.08em" }}>
+          I am signing in as…
+        </p>
         <div className="grid grid-cols-3 gap-3">
           {ROLES.map((r) => {
             const Icon = r.icon;
             const isSelected = role === r.id;
             return (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => setRole(r.id)}
+              <button key={r.id} type="button" onClick={() => setRole(r.id)}
                 className={cn(
-                  "flex flex-col items-center gap-2 p-4 border-2 rounded-xl transition-all duration-150 text-center",
-                  isSelected ? r.color + " shadow-sm" : "border-gray-200 text-gray-500 hover:border-gray-300",
-                  isSelected ? "ring-2 " + r.ring : ""
+                  "flex flex-col items-center gap-1.5 py-3.5 px-2 rounded-2xl text-sm font-semibold transition-all duration-250",
+                  isSelected ? "glass-card-active text-violet-700 scale-[1.04]" : "text-violet-400 hover:scale-[1.02]"
                 )}
+                style={!isSelected ? {
+                  background: "rgba(255,255,255,0.4)",
+                  border: "1px solid rgba(167,139,250,0.2)",
+                } : undefined}
               >
-                <Icon className="w-6 h-6" />
-                <span className="text-xs font-semibold">{r.label}</span>
+                <Icon className={cn("w-5 h-5", isSelected ? "text-violet-600" : "text-violet-400")} />
+                <span>{r.label}</span>
               </button>
             );
           })}
         </div>
-        <p className="text-xs text-slate-400 text-center mt-2">
-          {ROLES.find((r) => r.id === role)?.description}
-        </p>
       </div>
 
-      <form onSubmit={handleLogin} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Full Name</Label>
-          <div className="relative">
-            <User className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
-              id="name"
-              type="text"
-              placeholder="Your name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="pl-10 h-11 bg-white"
-            />
-          </div>
+      {/* Form */}
+      <form onSubmit={handleLogin} className="space-y-3.5">
+        <div className="relative">
+          <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#a78bfa" }} />
+          <input
+            type="text"
+            placeholder="Enter your full name"
+            value={name}
+            onChange={e => setName(e.target.value)}
+            className="glass-input w-full h-12 pl-10 pr-4 rounded-2xl text-sm"
+            style={{ color: "#2d2b55" }}
+          />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <div className="relative">
-            <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
-              id="email"
-              type="email"
-              placeholder="you@college.edu"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-11 bg-white"
-            />
-          </div>
+        <div className="relative">
+          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#a78bfa" }} />
+          <input
+            type="email"
+            placeholder="your@college.edu"
+            required
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className="glass-input w-full h-12 pl-10 pr-4 rounded-2xl text-sm"
+            style={{ color: "#2d2b55" }}
+          />
         </div>
-        <div className="space-y-2">
-          <Label htmlFor="password">Password</Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-            <Input
-              id="password"
-              type="password"
-              placeholder="••••••••"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="pl-10 h-11 bg-white"
-            />
-          </div>
+        <div className="relative">
+          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: "#a78bfa" }} />
+          <input
+            type={showPassword ? "text" : "password"}
+            placeholder="Your password"
+            required
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            className="glass-input w-full h-12 pl-10 pr-12 rounded-2xl text-sm"
+            style={{ color: "#2d2b55" }}
+          />
+          <button type="button" onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 transition-colors"
+            style={{ color: "#a78bfa" }}>
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
         </div>
-        <Button
-          type="submit"
-          className={cn(
-            "w-full h-11 text-base font-semibold transition-all shadow-md hover:shadow-lg mt-2",
-            role === "teacher"
-              ? "bg-emerald-600 hover:bg-emerald-700"
-              : role === "admin"
-              ? "bg-rose-600 hover:bg-rose-700"
-              : "bg-indigo-600 hover:bg-indigo-700"
+
+        <button type="submit" disabled={loading}
+          className="glass-btn w-full h-12 rounded-2xl text-base mt-1 flex items-center justify-center gap-2">
+          {loading ? (
+            <div className="w-5 h-5 rounded-full border-2 border-white/30 border-t-white animate-spin" />
+          ) : (
+            <>Sign In as {selectedRole.label}</>
           )}
-        >
-          Sign In as {ROLES.find((r) => r.id === role)?.label}
-        </Button>
+        </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-gray-500">
-        New to CampusFlow?{" "}
-        <Link href="/register" className="font-semibold text-indigo-600 hover:text-indigo-500">
-          Register here
+      {/* Footer */}
+      <div className="flex items-center justify-center gap-6 mt-5 text-sm">
+        <Link href="/register" className="font-medium transition-colors hover:text-violet-600" style={{ color: "#a78bfa", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+          Create an Account
         </Link>
-      </p>
+        <Link href="#" className="font-medium transition-colors hover:text-violet-600" style={{ color: "#a78bfa", textDecoration: "underline", textUnderlineOffset: "3px" }}>
+          Forgot Password?
+        </Link>
+      </div>
     </div>
   );
 }

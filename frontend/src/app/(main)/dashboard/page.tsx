@@ -1,29 +1,34 @@
 "use client";
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { CheckSquare, Bell, CalendarDays, Sparkles, BrainCircuit, BookOpen, Clock, PieChart } from "lucide-react";
+import { CheckSquare, Bell, CalendarDays, Sparkles, BrainCircuit, BookOpen, Clock, PieChart, TrendingUp, ArrowRight, Zap } from "lucide-react";
 import { useStore } from "@/lib/useStore";
 import { getUserName } from "@/lib/store";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 
+const stats = [
+  { key: "assignments", label: "Assignments", icon: CheckSquare, color: "#7c3aed", bg: "rgba(124,58,237,0.08)", border: "rgba(124,58,237,0.15)", href: "/dashboard/assignments" },
+  { key: "materials",   label: "Materials",   icon: BookOpen,    color: "#0ea5e9", bg: "rgba(14,165,233,0.08)",  border: "rgba(14,165,233,0.15)",  href: "/dashboard/materials" },
+  { key: "notices",     label: "Notices",     icon: Bell,        color: "#f59e0b", bg: "rgba(245,158,11,0.08)", border: "rgba(245,158,11,0.15)", href: "/dashboard/notices" },
+  { key: "events",      label: "Events",      icon: CalendarDays,color: "#10b981", bg: "rgba(16,185,129,0.08)", border: "rgba(16,185,129,0.15)", href: "/dashboard/calendar" },
+];
+
 export default function StudentDashboard() {
   const [name, setName] = useState("Student");
   const [absentRecords, setAbsentRecords] = useState<any[]>([]);
+  const [visible, setVisible] = useState(false);
   const { assignments, notices, materials, events } = useStore();
 
-  useEffect(() => { 
-    setName(getUserName()); 
+  useEffect(() => {
+    setName(getUserName());
+    setTimeout(() => setVisible(true), 100);
+
     const email = localStorage.getItem("userEmail");
     if (email) {
       import("@/services/attendanceApi").then(api => {
         api.getStudentAttendanceByEmail(email)
-          .then(data => {
-            const absent = data.records.filter((r: any) => r.status === 'Absent');
-            setAbsentRecords(absent);
-          })
-          .catch(err => console.error("Failed to fetch attendance:", err));
+          .then(data => setAbsentRecords(data.records.filter((r: any) => r.status === 'Absent')))
+          .catch(() => {});
       });
     }
   }, []);
@@ -31,171 +36,199 @@ export default function StudentDashboard() {
   const getDaysLeft = (deadline: string) => Math.ceil((new Date(deadline).getTime() - Date.now()) / 86400000);
   const urgentAssignments = assignments.filter(a => { const d = getDaysLeft(a.deadline); return d >= 0 && d <= 3; });
 
-  const noticeBadge: Record<string, string> = {
-    exam: "bg-red-100 text-red-700",
-    holiday: "bg-green-100 text-green-700",
-    event: "bg-blue-100 text-blue-700",
-    general: "bg-slate-100 text-slate-700",
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+  const emoji = hour < 12 ? "☀️" : hour < 18 ? "👋" : "🌙";
+
+  const storeValues: Record<string, number> = {
+    assignments: assignments.length,
+    materials: materials.length,
+    notices: notices.length,
+    events: events.length,
   };
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className={cn("space-y-6 max-w-5xl mx-auto transition-all duration-700", visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4")}>
+
       {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Welcome back, {name} 👋</h1>
-        <p className="text-slate-500 text-sm mt-1">Here's everything your teacher has shared with you.</p>
+      <div className="flex items-start justify-between animate-slide-up">
+        <div>
+          <h1 className="text-2xl font-black" style={{ color: "#2d2b55" }}>{greeting}, {name} {emoji}</h1>
+          <p className="text-sm mt-1" style={{ color: "#9580c4" }}>Here's everything your teacher has shared with you.</p>
+        </div>
+        <div className="glass-card hidden md:flex items-center gap-2 px-4 py-2 text-sm font-semibold"
+          style={{ borderRadius: "14px", color: "#7c3aed" }}>
+          <TrendingUp className="w-4 h-4" /> Student Dashboard
+        </div>
       </div>
 
-      {/* Stats */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {[
-          { label: "Assignments", value: assignments.length, icon: <CheckSquare className="w-5 h-5" />, color: "text-blue-600", bg: "bg-blue-50", href: "/dashboard/assignments" },
-          { label: "Study Materials", value: materials.length, icon: <BookOpen className="w-5 h-5" />, color: "text-purple-600", bg: "bg-purple-50", href: "/dashboard/materials" },
-          { label: "Notices", value: notices.length, icon: <Bell className="w-5 h-5" />, color: "text-amber-600", bg: "bg-amber-50", href: "/dashboard/notices" },
-          { label: "Upcoming Events", value: events.length, icon: <CalendarDays className="w-5 h-5" />, color: "text-emerald-600", bg: "bg-emerald-50", href: "/dashboard/calendar" },
-        ].map(s => (
-          <Link key={s.label} href={s.href}>
-            <Card className={cn("border shadow-sm hover:shadow-md transition-all cursor-pointer", s.bg)}>
-              <CardContent className="p-4 flex justify-between items-start">
-                <div>
-                  <div className={cn("text-3xl font-bold", s.color)}>{s.value}</div>
-                  <div className="text-xs text-slate-500 mt-0.5">{s.label}</div>
+        {stats.map((s, i) => {
+          const Icon = s.icon;
+          return (
+            <Link key={s.key} href={s.href}>
+              <div className="glass-card p-4 cursor-pointer animate-slide-up"
+                style={{ animationDelay: `${i * 0.08}s`, animationFillMode: "both", borderRadius: "20px" }}>
+                <div className="flex items-center justify-between mb-3">
+                  <div className="w-10 h-10 rounded-2xl flex items-center justify-center"
+                    style={{ background: s.bg, border: `1px solid ${s.border}` }}>
+                    <Icon className="w-5 h-5" style={{ color: s.color }} />
+                  </div>
+                  <ArrowRight className="w-4 h-4" style={{ color: "#c4b5fd" }} />
                 </div>
-                <span className={s.color}>{s.icon}</span>
-              </CardContent>
-            </Card>
-          </Link>
-        ))}
+                <div className="text-3xl font-black mb-0.5" style={{ color: s.color }}>{storeValues[s.key]}</div>
+                <div className="text-xs font-semibold" style={{ color: "#9580c4" }}>{s.label}</div>
+              </div>
+            </Link>
+          );
+        })}
       </div>
 
-      {/* Urgent Alert */}
+      {/* Attendance Alert */}
       {absentRecords.length > 0 && (
-        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-start gap-3">
-          <PieChart className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+        <div className="glass-card p-4 flex items-start gap-3 animate-scale-in"
+          style={{ borderRadius: "16px", background: "rgba(244,63,94,0.06)", border: "1px solid rgba(244,63,94,0.18)" }}>
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(244,63,94,0.12)" }}>
+            <PieChart className="w-4 h-4 text-rose-500" />
+          </div>
           <div>
-            <p className="text-sm font-bold text-rose-800">
-              🚨 Attendance Alert: You have been marked ABSENT
-            </p>
+            <p className="text-sm font-bold text-rose-600">🚨 Attendance Alert — You were marked Absent</p>
             <ul className="mt-1 space-y-0.5">
               {absentRecords.map((r, i) => (
-                <li key={i} className="text-xs text-rose-600 font-medium">
-                  · {r.subject_name} on {r.date}
-                </li>
+                <li key={i} className="text-xs text-rose-500">· {r.subject_name} on {r.date}</li>
               ))}
             </ul>
           </div>
         </div>
       )}
 
+      {/* Deadline Warning */}
       {urgentAssignments.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 flex items-start gap-3">
-          <Clock className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+        <div className="glass-card p-4 flex items-start gap-3 animate-scale-in"
+          style={{ borderRadius: "16px", background: "rgba(245,158,11,0.06)", border: "1px solid rgba(245,158,11,0.18)" }}>
+          <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0" style={{ background: "rgba(245,158,11,0.12)" }}>
+            <Clock className="w-4 h-4 text-amber-500" />
+          </div>
           <div>
-            <p className="text-sm font-semibold text-red-800">
-              ⚠️ {urgentAssignments.length} assignment{urgentAssignments.length > 1 ? "s are" : " is"} due within 3 days!
+            <p className="text-sm font-semibold text-amber-600">
+              ⚠️ {urgentAssignments.length} assignment{urgentAssignments.length > 1 ? "s" : ""} due within 3 days!
             </p>
-            <ul className="mt-1 space-y-0.5">
-              {urgentAssignments.map(a => (
-                <li key={a.id} className="text-xs text-red-600">
-                  · {a.title} — {getDaysLeft(a.deadline) === 0 ? "Due today!" : `${getDaysLeft(a.deadline)} day${getDaysLeft(a.deadline) !== 1 ? "s" : ""} left`}
-                </li>
-              ))}
-            </ul>
+            {urgentAssignments.map(a => (
+              <p key={a.id} className="text-xs text-amber-500 mt-0.5">
+                · {a.title} — {getDaysLeft(a.deadline) === 0 ? "Due today!" : `${getDaysLeft(a.deadline)} day(s) left`}
+              </p>
+            ))}
           </div>
         </div>
       )}
 
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Latest Assignments */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-              <CheckSquare className="w-4 h-4 text-blue-500" /> Assignments
-            </h2>
-            <Link href="/dashboard/assignments" className="text-xs text-indigo-600 hover:underline font-medium">View all →</Link>
-          </div>
-          {assignments.length === 0 ? (
-            <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center">
-              <CheckSquare className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-              <p className="text-sm text-slate-400">No assignments from teachers yet.</p>
+      {/* Content Grid */}
+      <div className="grid md:grid-cols-2 gap-5 animate-slide-up delay-300" style={{ animationFillMode: "both" }}>
+
+        {/* Assignments */}
+        <div className="glass-card overflow-hidden" style={{ borderRadius: "20px" }}>
+          <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(167,139,250,0.12)" }}>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(124,58,237,0.1)" }}>
+                <CheckSquare className="w-4 h-4 text-violet-600" />
+              </div>
+              <span className="text-sm font-bold" style={{ color: "#2d2b55" }}>Assignments</span>
             </div>
-          ) : (
-            assignments.slice(0, 4).map(a => {
+            <Link href="/dashboard/assignments"
+              className="text-xs font-semibold flex items-center gap-1 transition-all hover:gap-2" style={{ color: "#a78bfa" }}>
+              View all <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div className="p-3 space-y-2">
+            {assignments.length === 0 ? (
+              <div className="py-10 text-center">
+                <CheckSquare className="w-8 h-8 mx-auto mb-2" style={{ color: "#ddd6fe" }} />
+                <p className="text-xs" style={{ color: "#c4b5fd" }}>No assignments yet</p>
+              </div>
+            ) : assignments.slice(0, 4).map(a => {
               const days = getDaysLeft(a.deadline);
               return (
-                <Card key={a.id} className="border shadow-sm hover:shadow-md transition-shadow">
-                  <CardContent className="p-3 flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-800 truncate">{a.title}</p>
-                      <p className="text-xs text-slate-500">{a.subject} · {a.marks} marks</p>
-                    </div>
-                    <Badge className={cn("text-[10px] shrink-0 font-medium border",
-                      days < 0 ? "bg-red-50 text-red-700 border-red-200" :
-                      days <= 2 ? "bg-amber-50 text-amber-700 border-amber-200" :
-                      "bg-blue-50 text-blue-700 border-blue-200"
-                    )}>
-                      {days < 0 ? "Overdue" : days === 0 ? "Today!" : `${days}d left`}
-                    </Badge>
-                  </CardContent>
-                </Card>
+                <div key={a.id} className="flex items-center justify-between px-3 py-2.5 rounded-2xl transition-all hover:bg-white/60"
+                  style={{ background: "rgba(255,255,255,0.45)", border: "1px solid rgba(167,139,250,0.1)" }}>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold truncate" style={{ color: "#2d2b55" }}>{a.title}</p>
+                    <p className="text-xs" style={{ color: "#b09fd4" }}>{a.subject} · {a.marks} marks</p>
+                  </div>
+                  <span className={cn("text-[10px] font-bold px-2.5 py-1 rounded-xl shrink-0 ml-2",
+                    days < 0 ? "badge-rose" : days <= 2 ? "badge-amber" : "badge-lavender"
+                  )}>
+                    {days < 0 ? "Overdue" : days === 0 ? "Today!" : `${days}d`}
+                  </span>
+                </div>
               );
-            })
-          )}
+            })}
+          </div>
         </div>
 
-        {/* Latest Notices */}
-        <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
-              <Bell className="w-4 h-4 text-amber-500" /> Notices from Faculty
-            </h2>
-            <Link href="/dashboard/notices" className="text-xs text-indigo-600 hover:underline font-medium">View all →</Link>
-          </div>
-          {notices.length === 0 ? (
-            <div className="border-2 border-dashed border-slate-200 rounded-xl p-8 text-center">
-              <Bell className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-              <p className="text-sm text-slate-400">No notices from teachers yet.</p>
+        {/* Notices */}
+        <div className="glass-card overflow-hidden" style={{ borderRadius: "20px" }}>
+          <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(167,139,250,0.12)" }}>
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(245,158,11,0.1)" }}>
+                <Bell className="w-4 h-4 text-amber-500" />
+              </div>
+              <span className="text-sm font-bold" style={{ color: "#2d2b55" }}>Notices</span>
             </div>
-          ) : (
-            notices.slice(0, 4).map(n => (
-              <Card key={n.id} className="border shadow-sm hover:shadow-md transition-shadow">
-                <CardContent className="p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <p className="text-sm font-semibold text-slate-800 flex-1">{n.title}</p>
-                    <span className={cn("text-[10px] font-semibold px-2 py-0.5 rounded-full capitalize shrink-0", noticeBadge[n.type])}>
-                      {n.type}
-                    </span>
-                  </div>
-                  {n.message && <p className="text-xs text-slate-500 mt-1 line-clamp-2">{n.message}</p>}
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    {new Date(n.date).toLocaleDateString("en-IN", { day: "numeric", month: "long" })}
-                  </p>
-                </CardContent>
-              </Card>
-            ))
-          )}
+            <Link href="/dashboard/notices"
+              className="text-xs font-semibold flex items-center gap-1 transition-all hover:gap-2" style={{ color: "#a78bfa" }}>
+              View all <ArrowRight className="w-3 h-3" />
+            </Link>
+          </div>
+          <div className="p-3 space-y-2">
+            {notices.length === 0 ? (
+              <div className="py-10 text-center">
+                <Bell className="w-8 h-8 mx-auto mb-2" style={{ color: "#ddd6fe" }} />
+                <p className="text-xs" style={{ color: "#c4b5fd" }}>No notices yet</p>
+              </div>
+            ) : notices.slice(0, 4).map(n => (
+              <div key={n.id} className="px-3 py-2.5 rounded-2xl transition-all hover:bg-white/60"
+                style={{ background: "rgba(255,255,255,0.45)", border: "1px solid rgba(167,139,250,0.1)" }}>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="text-sm font-semibold flex-1" style={{ color: "#2d2b55" }}>{n.title}</p>
+                  <span className={cn("shrink-0",
+                    n.type === "exam" ? "badge-rose" : n.type === "holiday" ? "badge-emerald" :
+                    n.type === "event" ? "badge-lavender" : "text-[10px] font-bold px-2 py-0.5 rounded-xl bg-slate-100 text-slate-500"
+                  )}>{n.type}</span>
+                </div>
+                {n.message && <p className="text-xs mt-0.5 line-clamp-1" style={{ color: "#b09fd4" }}>{n.message}</p>}
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
-      {/* AI Study Buddy CTA */}
-      <Card className="border-0 bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-500 text-white shadow-lg overflow-hidden relative">
-        <div className="absolute right-0 top-0 opacity-10 p-4"><Sparkles className="w-28 h-28" /></div>
-        <CardContent className="p-6 flex items-center justify-between">
-          <div>
-            <h3 className="text-lg font-bold flex items-center gap-2">
-              <BrainCircuit className="w-5 h-5" /> AI Study Buddy
-            </h3>
-            <p className="text-sm text-indigo-100 mt-1">
-              Upload your notes → get AI flashcards, MCQs, and mind maps instantly.
-            </p>
+      {/* AI CTA */}
+      <div className="glass-card p-6 flex items-center justify-between relative overflow-hidden animate-slide-up delay-400"
+        style={{
+          borderRadius: "24px",
+          animationFillMode: "both",
+          background: "linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(167,139,250,0.08) 100%)",
+          border: "1px solid rgba(124,58,237,0.2)"
+        }}>
+        <div className="absolute -right-6 -top-6 opacity-5 pointer-events-none">
+          <Sparkles className="w-44 h-44 text-violet-600 animate-spin-slow" />
+        </div>
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "rgba(124,58,237,0.15)" }}>
+              <BrainCircuit className="w-4 h-4 text-violet-600" />
+            </div>
+            <h3 className="text-lg font-black" style={{ color: "#2d2b55" }}>AI Study Buddy</h3>
           </div>
-          <Link href="/study-buddy">
-            <button className="bg-white text-indigo-700 font-semibold px-5 py-2.5 rounded-xl text-sm hover:bg-indigo-50 transition-colors shadow-md whitespace-nowrap">
-              Launch AI →
-            </button>
-          </Link>
-        </CardContent>
-      </Card>
+          <p className="text-sm" style={{ color: "#9580c4" }}>Upload notes → get flashcards, MCQs & mind maps instantly.</p>
+        </div>
+        <Link href="/study-buddy" className="relative z-10 shrink-0">
+          <button className="glass-btn px-5 py-2.5 rounded-2xl text-sm whitespace-nowrap flex items-center gap-2">
+            <Zap className="w-4 h-4" /> Launch AI
+          </button>
+        </Link>
+      </div>
     </div>
   );
 }

@@ -1,17 +1,9 @@
 "use client";
 
-import { Bell, Search, User, LogOut } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import {
-  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
-  DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Bell, Search, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
 import { getUserName, getRole, getNotices } from "@/lib/store";
 import { useRouter } from "next/navigation";
-import { cn } from "@/lib/utils";
 
 export function Header() {
   const [name, setName] = useState("User");
@@ -26,61 +18,56 @@ export function Header() {
   }, []);
 
   const initial = name[0]?.toUpperCase() || "U";
-  const avatarGrad = role === "teacher" ? "from-emerald-500 to-teal-500" : "from-indigo-500 to-purple-500";
+  const isTeacher = role === "teacher";
 
   const handleLogout = () => {
     localStorage.removeItem("userRole");
     localStorage.removeItem("userName");
+    localStorage.removeItem("userEmail");
     router.push("/login");
   };
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80">
+    <header className="sticky top-0 z-50 w-full"
+      style={{
+        background: "rgba(255,255,255,0.65)",
+        backdropFilter: "blur(20px)",
+        WebkitBackdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(167,139,250,0.18)",
+        boxShadow: "0 2px 20px rgba(124,58,237,0.06)",
+      }}>
       <div className="flex h-14 items-center px-6 gap-4">
-        <div className="relative flex-1 hidden md:block max-w-md">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
-          <Input
+        {/* Search */}
+        <div className="relative flex-1 hidden md:block max-w-sm">
+          <Search className="absolute left-3.5 top-2.5 h-4 w-4" style={{ color: "#b09fd4" }} />
+          <input
             type="search"
-            placeholder={role === "teacher" ? "Search assignments, students..." : "Search assignments, materials..."}
-            className="pl-9 w-full bg-slate-50 border-slate-200 rounded-lg text-sm focus-visible:ring-1 focus-visible:ring-indigo-400"
+            placeholder={isTeacher ? "Search assignments, students..." : "Search materials, notices..."}
+            className="glass-input w-full pl-10 pr-4 h-9 rounded-xl text-sm"
+            style={{ color: "#2d2b55" }}
           />
         </div>
 
-        <div className="ml-auto flex items-center gap-2">
-          {/* Notification bell */}
-          <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-lg hover:bg-slate-100">
-            <Bell className="h-4 w-4 text-slate-500" />
+        <div className="ml-auto flex items-center gap-2.5">
+          {/* Bell */}
+          <button className="relative h-9 w-9 rounded-xl flex items-center justify-center transition-all hover:scale-110"
+            style={{ background: "rgba(255,255,255,0.6)", border: "1px solid rgba(167,139,250,0.2)", boxShadow: "0 2px 8px rgba(124,58,237,0.08)" }}>
+            <Bell className="h-4 w-4" style={{ color: "#a78bfa" }} />
             {hasNotice && (
-              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+              <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-rose-400 animate-pulse border-2 border-white" />
             )}
-          </Button>
+          </button>
 
-          {/* User dropdown */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className="outline-none">
-              <Avatar className="h-8 w-8 border-2 border-slate-200 hover:border-indigo-400 transition-colors cursor-pointer">
-                <AvatarFallback className={cn("bg-gradient-to-br text-white text-sm font-bold", avatarGrad)}>
-                  {initial}
-                </AvatarFallback>
-              </Avatar>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent className="w-52" align="end">
-              <DropdownMenuLabel>
-                <div className="flex flex-col gap-0.5">
-                  <p className="text-sm font-semibold">{name}</p>
-                  <p className="text-xs text-slate-400 capitalize">{role} account</p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="cursor-pointer">
-                <User className="mr-2 h-4 w-4" /> Profile
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem className="text-red-600 cursor-pointer" onClick={handleLogout}>
-                <LogOut className="mr-2 h-4 w-4" /> Log out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {/* Avatar */}
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center text-white text-sm font-bold cursor-pointer transition-transform hover:scale-110"
+            style={{
+              background: isTeacher
+                ? "linear-gradient(135deg,#059669,#34d399)"
+                : "linear-gradient(135deg,#7c3aed,#a78bfa)",
+              boxShadow: isTeacher ? "0 4px 12px rgba(5,150,105,0.3)" : "0 4px 12px rgba(124,58,237,0.3)"
+            }}>
+            {initial}
+          </div>
         </div>
       </div>
     </header>
