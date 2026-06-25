@@ -9,7 +9,7 @@
     "branch": "CSE",
     "year": "1",
     "section": "B",
-    "overall_attendance_percentage": 14.29
+    "overall_attendance_percentage": 12.5
   },
   {
     "id": "std-2",
@@ -21,7 +21,7 @@
     "branch": "CSE",
     "year": "1",
     "section": "B",
-    "overall_attendance_percentage": 42.86
+    "overall_attendance_percentage": 50
   },
   {
     "id": "std-3",
@@ -45,7 +45,7 @@
     "branch": "ECE",
     "year": "1",
     "section": "B",
-    "overall_attendance_percentage": 85.71
+    "overall_attendance_percentage": 87.5
   },
   {
     "id": "std-5",
@@ -57,6 +57,6 @@
     "branch": "ECE",
     "year": "1",
     "section": "B",
-    "overall_attendance_percentage": 71.43
+    "overall_attendance_percentage": 75
   }
 ]

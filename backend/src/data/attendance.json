@@ -278,5 +278,45 @@
     "date": "2026-06-25",
     "status": "Present",
     "created_at": "2026-06-25T05:46:32.572Z"
+  },
+  {
+    "id": "att-1782366656343-lneq50870",
+    "student_id": "std-1",
+    "subject_id": "sub-1",
+    "date": "2026-06-25",
+    "status": "Absent",
+    "created_at": "2026-06-25T05:50:56.343Z"
+  },
+  {
+    "id": "att-1782366656343-xeqale30p",
+    "student_id": "std-2",
+    "subject_id": "sub-1",
+    "date": "2026-06-25",
+    "status": "Present",
+    "created_at": "2026-06-25T05:50:56.343Z"
+  },
+  {
+    "id": "att-1782366656343-u48ll82cz",
+    "student_id": "std-3",
+    "subject_id": "sub-1",
+    "date": "2026-06-25",
+    "status": "Present",
+    "created_at": "2026-06-25T05:50:56.343Z"
+  },
+  {
+    "id": "att-1782366656343-znycjoxad",
+    "student_id": "std-4",
+    "subject_id": "sub-1",
+    "date": "2026-06-25",
+    "status": "Present",
+    "created_at": "2026-06-25T05:50:56.343Z"
+  },
+  {
+    "id": "att-1782366656343-pijy00o82",
+    "student_id": "std-5",
+    "subject_id": "sub-1",
+    "date": "2026-06-25",
+    "status": "Present",
+    "created_at": "2026-06-25T05:50:56.343Z"
   }
 ]

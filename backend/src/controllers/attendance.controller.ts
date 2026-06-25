@@ -1,24 +1,17 @@
 import { Request, Response } from 'express';
+import { supabase } from '../config/supabase';
 import { markAttendance } from '../services/attendance.service';
-import fs from 'fs';
-import path from 'path';
-
-const studentsFilePath = path.join(__dirname, '../data/students.json');
-const subjectsFilePath = path.join(__dirname, '../data/subjects.json');
 
 export const submitAttendance = async (req: Request, res: Response): Promise<void> => {
   try {
     const { subjectId, date, attendance } = req.body;
-
     if (!subjectId || !date || !attendance || !Array.isArray(attendance)) {
       res.status(400).json({ error: 'Missing required fields' });
       return;
     }
-
     const result = await markAttendance(subjectId, date, attendance);
     res.status(200).json(result);
   } catch (error: any) {
-    console.error('Error submitting attendance:', error);
     res.status(500).json({ error: error.message || 'Internal server error' });
   }
 };
@@ -31,34 +24,30 @@ export const getStudentAttendanceByEmail = async (req: Request, res: Response): 
       return;
     }
 
-    const studentsData = fs.readFileSync(studentsFilePath, 'utf8');
-    const allStudents = JSON.parse(studentsData);
-    const studentEmail = (email as string).trim().toLowerCase();
-    const student = allStudents.find((s: any) => s.email.trim().toLowerCase() === studentEmail);
+    const studentEmail = email.trim().toLowerCase();
+    
+    // Fetch student
+    const { data: student, error: studentError } = await supabase
+      .from('students')
+      .select('*')
+      .ilike('email', studentEmail)
+      .single();
 
-    if (!student) {
+    if (studentError || !student) {
       res.status(404).json({ error: 'Student not found' });
       return;
     }
 
-    // Read attendance records
-    const attendanceFilePath = path.join(__dirname, '../data/attendance.json');
-    let allAttendance = [];
-    if (fs.existsSync(attendanceFilePath)) {
-      allAttendance = JSON.parse(fs.readFileSync(attendanceFilePath, 'utf8'));
-    }
+    // Fetch records
+    const { data: records, error: recordsError } = await supabase
+      .from('attendance')
+      .select('*, subjects(subject_name)')
+      .eq('student_id', student.id);
 
-    // Read subjects to map subject name
-    const subjectsData = fs.readFileSync(subjectsFilePath, 'utf8');
-    const subjects = JSON.parse(subjectsData);
-    const subjectMap = new Map(subjects.map((sub: any) => [sub.id, sub.subject_name]));
-
-    const studentRecords = allAttendance
-      .filter((record: any) => record.student_id === student.id)
-      .map((record: any) => ({
-        ...record,
-        subject_name: subjectMap.get(record.subject_id) || 'Unknown Subject'
-      }));
+    const studentRecords = (records || []).map((r: any) => ({
+      ...r,
+      subject_name: r.subjects?.subject_name || 'Unknown Subject'
+    }));
 
     res.status(200).json({
       student: {
@@ -69,27 +58,18 @@ export const getStudentAttendanceByEmail = async (req: Request, res: Response): 
       records: studentRecords
     });
   } catch (error: any) {
-    console.error('Error fetching student attendance:', error);
     res.status(500).json({ error: error.message || 'Internal server error' });
   }
 };
 
 export const getStudentsForAttendance = async (req: Request, res: Response): Promise<void> => {
   try {
-    const studentsData = fs.readFileSync(studentsFilePath, 'utf8');
-    const allStudents = JSON.parse(studentsData);
-    
-    const students = allStudents
-      .map((s: any) => ({
-        id: s.id,
-        register_number: s.register_number,
-        name: s.name,
-        email: s.email,
-        password: s.password,
-        overall_attendance_percentage: s.overall_attendance_percentage
-      }))
-      .sort((a: any, b: any) => a.register_number.localeCompare(b.register_number));
-
+    const { data: students, error } = await supabase
+      .from('students')
+      .select('id, register_number, name, email, overall_attendance_percentage')
+      .order('register_number');
+      
+    if (error) throw error;
     res.status(200).json({ students });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Internal server error' });
@@ -98,8 +78,8 @@ export const getStudentsForAttendance = async (req: Request, res: Response): Pro
 
 export const getSubjects = async (req: Request, res: Response): Promise<void> => {
   try {
-    const subjectsData = fs.readFileSync(subjectsFilePath, 'utf8');
-    const subjects = JSON.parse(subjectsData);
+    const { data: subjects, error } = await supabase.from('subjects').select('*');
+    if (error) throw error;
     res.status(200).json({ subjects });
   } catch (error: any) {
     res.status(500).json({ error: error.message || 'Internal server error' });

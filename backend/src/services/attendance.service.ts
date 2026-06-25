@@ -1,28 +1,25 @@
-import fs from 'fs';
-import path from 'path';
+import { supabase } from '../config/supabase';
 import { AttendanceRecordInput } from '../models/Attendance';
-import { recalculateStudentAttendance } from './attendancePercentage.service';
 import { triggerN8nAttendanceWebhook } from './n8n.service';
-
-const subjectsFilePath = path.join(__dirname, '../data/subjects.json');
-const attendanceFilePath = path.join(__dirname, '../data/attendance.json');
-const studentsFilePath = path.join(__dirname, '../data/students.json');
+import { recalculateStudentAttendance } from './attendancePercentage.service';
 
 export const markAttendance = async (
   subjectId: string,
   date: string,
   attendance: AttendanceRecordInput[]
 ) => {
-  // 1. Validate subject exists and get details
-  const subjectsData = fs.readFileSync(subjectsFilePath, 'utf8');
-  const allSubjects = JSON.parse(subjectsData);
-  const subject = allSubjects.find((s: any) => s.id === subjectId);
+  // 1. Validate subject
+  const { data: subject, error: subjectError } = await supabase
+    .from('subjects')
+    .select('*')
+    .eq('id', subjectId)
+    .single();
 
-  if (!subject) {
+  if (subjectError || !subject) {
     throw new Error('Invalid subject ID');
   }
 
-  // 2. Store attendance records
+  // 2. Insert Attendance
   const recordsToInsert = attendance.map((record) => ({
     id: `att-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
     student_id: record.studentId,
@@ -32,30 +29,25 @@ export const markAttendance = async (
     created_at: new Date().toISOString()
   }));
 
-  const attendanceData = fs.readFileSync(attendanceFilePath, 'utf8');
-  const allAttendance = JSON.parse(attendanceData);
-  
-  allAttendance.push(...recordsToInsert);
-  fs.writeFileSync(attendanceFilePath, JSON.stringify(allAttendance, null, 2));
+  const { error: insertError } = await supabase.from('attendance').insert(recordsToInsert);
+  if (insertError) throw new Error('Failed to insert attendance');
 
-  // 3. For every student, calculate attendance percentage and get student details
+  // 3. For every student, calculate percentage
   const studentsPayload = [];
-
-  const studentsData = fs.readFileSync(studentsFilePath, 'utf8');
-  const allStudents = JSON.parse(studentsData);
-
+  
   for (const record of attendance) {
-    // Recalculate percentage
     const updatedPercentage = await recalculateStudentAttendance(record.studentId);
     
-    // Get student details for the payload
-    const student = allStudents.find((s: any) => s.id === record.studentId);
+    // Get student details
+    const { data: student } = await supabase
+      .from('students')
+      .select('*')
+      .eq('id', record.studentId)
+      .single();
 
     if (student) {
-      // Calculate required classes to hit 75% if below
       let requiredClasses = 0;
       if (updatedPercentage < 75) {
-        // Simple mock calculation: for every missing %, roughly 1 class needed (customizable logic)
         requiredClasses = Math.ceil((75 - updatedPercentage) / 2); 
       }
 
@@ -70,7 +62,7 @@ export const markAttendance = async (
     }
   }
 
-  // 4. Trigger n8n webhook with all students
+  // 4. Trigger n8n webhook
   if (studentsPayload.length > 0) {
     const payload = {
       subject: subject.subject_name,
@@ -82,5 +74,5 @@ export const markAttendance = async (
     await triggerN8nAttendanceWebhook(payload);
   }
 
-  return { success: true, message: 'Attendance marked successfully' };
+  return { success: true, message: 'Attendance marked successfully via Supabase' };
 };
