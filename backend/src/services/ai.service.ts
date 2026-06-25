@@ -1,17 +1,16 @@
-import { ChatGoogleGenerativeAI, GoogleGenerativeAIEmbeddings } from "@langchain/google-genai";
-import { ChatOpenAI } from "@langchain/openai";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
 import { RecursiveCharacterTextSplitter } from "@langchain/textsplitters";
 import { MemoryVectorStore } from "@langchain/classic/vectorstores/memory";
 const pdfParse = require("pdf-parse");
 
-const apiKey = process.env.GOOGLE_API_KEY;
-if (!apiKey) {
-  console.error("GOOGLE_API_KEY is not set in the .env file.");
-}
+const openRouterKey = "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";
 
-const embeddings = new GoogleGenerativeAIEmbeddings({
-  model: "gemini-embedding-001",
-  apiKey: apiKey,
+const embeddings = new OpenAIEmbeddings({
+  modelName: "openai/text-embedding-3-small",
+  apiKey: openRouterKey,
+  configuration: {
+    baseURL: "https://openrouter.ai/api/v1",
+  }
 });
 
 const llm = new ChatOpenAI({

@@ -1,5 +1,7 @@
 import 'dotenv/config';
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+const { setGlobalDispatcher, Agent } = require('undici');
+setGlobalDispatcher(new Agent({ connect: { rejectUnauthorized: false } }));
 import express from 'express';
 import cors from 'cors';
 import aiRoutes from './routes/ai.routes';

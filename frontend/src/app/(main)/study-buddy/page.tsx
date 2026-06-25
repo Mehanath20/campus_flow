@@ -47,7 +47,7 @@ export default function StudyBuddyPage() {
     const topicToUse = flashcardTopic.trim() || "Core concepts and definitions";
     setIsGeneratingFlashcards(true);
     try {
-      const res = await fetch('http://localhost:5000/api/ai/study-material', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/ai/study-material`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic: topicToUse, type: 'flashcards' }),
@@ -72,7 +72,7 @@ export default function StudyBuddyPage() {
     const topicToUse = mcqTopic.trim() || "Important topics and key details";
     setIsGeneratingMCQs(true);
     try {
-      const res = await fetch('http://localhost:5000/api/ai/study-material', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/ai/study-material`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic: topicToUse, type: 'mcq' }),
@@ -97,7 +97,7 @@ export default function StudyBuddyPage() {
     const topicToUse = examTopic.trim() || "Comprehensive chapter summary";
     setIsGeneratingNotes(true);
     try {
-      const res = await fetch('http://localhost:5000/api/ai/study-material', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/ai/study-material`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic: topicToUse, type: 'notes' }),
@@ -120,7 +120,7 @@ export default function StudyBuddyPage() {
     const topicToUse = mindMapTopic.trim() || "Main hierarchical structure and themes";
     setIsGeneratingMindMap(true);
     try {
-      const res = await fetch('http://localhost:5000/api/ai/study-material', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/ai/study-material`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ topic: topicToUse, type: 'mindmap' }),
@@ -152,16 +152,16 @@ export default function StudyBuddyPage() {
     if (!file) return;
 
     setIsUploading(true);
-    setUploadedFileName(file.name);
     const formData = new FormData();
     formData.append('document', file);
 
     try {
-      const res = await fetch('http://localhost:5000/api/ai/upload', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/ai/upload`, {
         method: 'POST',
         body: formData,
       });
       if (res.ok) {
+        setUploadedFileName(file.name);
         alert('PDF Uploaded successfully! You can now ask questions about it.');
       } else {
         alert('Failed to upload PDF.');
@@ -184,7 +184,7 @@ export default function StudyBuddyPage() {
     setIsChatLoading(true);
 
     try {
-      const res = await fetch('http://localhost:5000/api/ai/tutor', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000'}/api/ai/tutor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query: userMsg }),
