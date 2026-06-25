@@ -1,0 +1,12 @@
+[
+  {
+    "id": "sub-1",
+    "subject_name": "DBMS",
+    "faculty_id": "Dr Kumar"
+  },
+  {
+    "id": "sub-2",
+    "subject_name": "Operating Systems",
+    "faculty_id": "Dr Smith"
+  }
+]

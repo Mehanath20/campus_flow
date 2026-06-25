@@ -1,0 +1,62 @@
+[
+  {
+    "id": "std-1",
+    "register_number": "REG001",
+    "name": "Meha",
+    "email": "meha@example.com",
+    "password": "password123",
+    "telegram_chat_id": "123456789",
+    "branch": "CSE",
+    "year": "1",
+    "section": "B",
+    "overall_attendance_percentage": 14.29
+  },
+  {
+    "id": "std-2",
+    "register_number": "REG002",
+    "name": "Alex",
+    "email": "alex@example.com",
+    "password": "password123",
+    "telegram_chat_id": "987654321",
+    "branch": "CSE",
+    "year": "1",
+    "section": "B",
+    "overall_attendance_percentage": 42.86
+  },
+  {
+    "id": "std-3",
+    "register_number": "REG003",
+    "name": "Sarah",
+    "email": "sarah@example.com",
+    "password": "password123",
+    "telegram_chat_id": "111222333",
+    "branch": "ECE",
+    "year": "1",
+    "section": "B",
+    "overall_attendance_percentage": 100
+  },
+  {
+    "id": "std-4",
+    "register_number": "REG004",
+    "name": "John",
+    "email": "john.ece@example.com",
+    "password": "password123",
+    "telegram_chat_id": "444555666",
+    "branch": "ECE",
+    "year": "1",
+    "section": "B",
+    "overall_attendance_percentage": 85.71
+  },
+  {
+    "id": "std-5",
+    "register_number": "REG005",
+    "name": "Emma",
+    "email": "emma.ece@example.com",
+    "password": "password123",
+    "telegram_chat_id": "777888999",
+    "branch": "ECE",
+    "year": "1",
+    "section": "B",
+    "overall_attendance_percentage": 71.43
+  }
+]
