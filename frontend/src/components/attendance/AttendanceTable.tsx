@@ -1,11 +1,11 @@
 import React from 'react';
-import { Student, AttendanceRecord } from '../../types/attendance';
+import { Student, AttendanceRecord, AttendanceStatus } from '../../types/attendance';
 import AttendanceRow from './AttendanceRow';
 
 interface AttendanceTableProps {
   students: Student[];
   attendanceRecords: AttendanceRecord[];
-  onStatusChange: (studentId: string, status: 'Present' | 'Absent') => void;
+  onStatusChange: (studentId: string, status: AttendanceStatus) => void;
   onSubmit: () => void;
   isSubmitting: boolean;
 }

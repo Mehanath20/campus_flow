@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 export default function StudentAttendancePage() {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [data, setData] = useState<{ student: any; records: any[] } | null>(null);
+  const [data, setData] = useState<{ student?: any; records?: any[]; error?: string } | null>(null);
 
   useEffect(() => {
     const fetchAttendance = async () => {

@@ -78,7 +78,7 @@ export default function TeacherAttendancePage() {
     }
   };
 
-  const handleStatusChange = (studentId: string, status: 'Present' | 'Absent') => {
+  const handleStatusChange = (studentId: string, status: 'Present' | 'Absent' | null) => {
     setAttendanceRecords(prev => 
       prev.map(record => 
         record.studentId === studentId ? { ...record, status } : record
